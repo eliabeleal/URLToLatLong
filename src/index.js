@@ -1,23 +1,33 @@
 const fs = require('fs')
+const path = require('path')
 const csv = require('csv-parser')
-const users = [];
+const uu = require('url-unshort')();
 
-fs.createReadStream('input.csv')
+
+const file = path.resolve(__dirname, '..', 'files', 'CG_F2.csv')
+
+const regexLatLog = /-\d.\d*,-\d{2}.\d*/g
+const regexCoord = /7%C2%.+%22W/
+
+
+
+
+fs.createReadStream(file)
     .pipe(csv())
-    .on('data', function (row) {
-        const username = generateUsername(row.Firstname, row.Surname);
-        const password = randomWords(3).join("-");
+    .on('data', async function (row) {
+        try {
+            const url = await uu.expand(`${row.coordinates}`)
+            if (url) {
+                console.log("seq"+row.sequence, decodeURI(url.match(regexCoord)).replace('+', ' '))
 
-        const user = {
-            username,
-            firstname: row.Firstname,
-            surname: row.Surname,
-            roles: row.Roles,
-            password
+            }
+            else console.log('not expanded');
+        } catch (err) {
+            console.log(err);
         }
-        users.push(user)
+        // console.log(row.coordinates);
     })
     .on('end', function () {
-        console.table(users)
+        console.table("End")
         // TODO: SAVE users data to another file
     })
